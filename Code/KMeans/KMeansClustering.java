@@ -10,10 +10,10 @@ public class KMeansClustering {
 
     public static void main(String[] args) {
         double[][] data = new double[N][DIM];
-        generateRandomData(data);
+        generateDatasetSDO(data);
 
-        try (FileWriter csvWriter = new FileWriter("clustering_results.csv")) {
-            csvWriter.append("M,Run,Error,Cluster,Center_X,Center_Y,Point_X,Point_Y\n");
+        try (FileWriter csvWriter = new FileWriter("best_clustering_results.csv")) {
+            csvWriter.append("M,Error,Cluster,Center_X,Center_Y,X,Y\n");
 
             for (int M : CLUSTER_COUNTS) {
                 System.out.println("Running K-Means for M = " + M);
@@ -34,43 +34,59 @@ public class KMeansClustering {
                         currentError = calculateClusteringError(data, clusters, centroids, M);
                     } while (Math.abs(previousError - currentError) > 1e-6);
 
+                    System.out.printf("M = %d, Run = %d, Error = %.6f\n", M, run + 1, currentError);
+
                     if (currentError < minError) {
                         minError = currentError;
-                        for (int i = 0; i < M; i++)
+                        for (int i = 0; i < M; i++) {
                             bestCentroids[i] = Arrays.copyOf(centroids[i], DIM);
-                    }
-
-                    // Write centroids to CSV
-                    for (int i = 0; i < M; i++) {
-                        csvWriter.append(String.format("%d,%d,%f,%d,%f,%f,,\n", M, run + 1, currentError, i + 1, centroids[i][0], centroids[i][1]));
-                    }
-
-                    // Write points and their assigned clusters to CSV
-                    for (int i = 0; i < N; i++) {
-                        csvWriter.append(String.format("%d,%d,%f,%d,,,%.6f,%.6f\n", M, run + 1, currentError, clusters[i] + 1, data[i][0], data[i][1]));
+                        }
                     }
                 }
 
-                System.out.println("Best clustering error for M = " + M + ": " + minError);
-                System.out.println("Cluster centers for M = " + M + ":");
+                // Write the best results for this M to the CSV
                 for (int i = 0; i < M; i++) {
-                    System.out.println("Center " + (i + 1) + ": " + Arrays.toString(bestCentroids[i]));
+                    for (int j = 0; j < N; j++) {
+                        if (clusters[j] == i) {
+                            csvWriter.append(String.format("%d,%.6f,%d,%.6f,%.6f,%.6f,%.6f\n", 
+                                M, minError, i + 1, bestCentroids[i][0], bestCentroids[i][1], data[j][0], data[j][1]));
+                        }
+                    }
                 }
-                System.out.println();
+
+                System.out.printf("Best clustering error for M = %d: %.6f\n", M, minError);
             }
 
-            System.out.println("Results written to clustering_results.csv");
+            System.out.println("Best results written to best_clustering_results.csv");
         } catch (IOException e) {
             System.err.println("Error writing to CSV file: " + e.getMessage());
         }
     }
 
-    private static void generateRandomData(double[][] data) {
+    private static void generateDatasetSDO(double[][] data) {
         Random random = new Random();
-        for (int i = 0; i < N; i++) {
-            for (int j = 0; j < DIM; j++) {
-                data[i][j] = random.nextDouble() * 4 - 2; // Random values in [-2, 2]
+        int index = 0;
+
+        double[][] regions = {
+            {-2, -1.6, 1.6, 2}, {-1.2, -0.8, 1.6, 2}, {-0.4, 0, 1.6, 2},
+            {-1.8, -1.4, 0.8, 1.2}, {-0.6, -0.2, 0.8, 1.2}, {-2, -1.6, 0, 0.4},
+            {-1.2, -0.8, 0, 0.4}, {-0.4, 0, 0, 0.4}
+        };
+
+        // Generate 100 points for each specific region
+        for (double[] region : regions) {
+            for (int i = 0; i < 100; i++) {
+                data[index][0] = region[0] + random.nextDouble() * (region[1] - region[0]);
+                data[index][1] = region[2] + random.nextDouble() * (region[3] - region[2]);
+                index++;
             }
+        }
+
+        // Generate 200 additional points in the larger region
+        for (int i = 0; i < 200; i++) {
+            data[index][0] = -2 + random.nextDouble() * 2;
+            data[index][1] = 0 + random.nextDouble() * 2;
+            index++;
         }
     }
 
