@@ -27,27 +27,67 @@ public class YNProject1 {
         try (FileWriter writer = new FileWriter("results.csv")) {
             writer.write("Model,H1,H2,H3,Activation,BatchSize,Accuracy\n");
 
+            // Step 1: Find the best H1
+            int bestH1 = 0;
+            double bestAccuracyH1 = 0.0;
             for (int h1 : h1Values) {
-                for (int h2 : h2Values) {
-                    for (String activation : activations) {
-                        for (int batchSize : batchSizes) {
-                            MLP pt2 = new MLP(new int[]{D, h1, h2, K}, activation, ACTIVATION_OUTPUT);
-                            pt2.train(encodedTrainingData, batchSize, MIN_EPOCHS, ERROR_THRESHOLD);
-                            double accuracyPT2 = pt2.evaluate(encodedTestingData);
-                            writer.write(String.format("PT2,%d,%d,NA,%s,%d,%.2f\n", h1, h2, activation, batchSize, accuracyPT2));
-                            
-                            for (int h3 : h3Values) {
-                                MLP pt3 = new MLP(new int[]{D, h1, h2, h3, K}, activation, ACTIVATION_OUTPUT);
-                                pt3.train(encodedTrainingData, batchSize, MIN_EPOCHS, ERROR_THRESHOLD);
-                                double accuracyPT3 = pt3.evaluate(encodedTestingData);
-                                writer.write(String.format("PT3,%d,%d,%d,%s,%d,%.2f\n", h1, h2, h3, activation, batchSize, accuracyPT3));
-                            }
+                for (String activation : activations) {
+                    for (int batchSize : batchSizes) {
+                        MLP model = new MLP(new int[]{D, h1, K}, activation, ACTIVATION_OUTPUT);
+                        model.train(encodedTrainingData, batchSize, 800, 200);
+                        double accuracy = model.evaluate(encodedTestingData);
+                        if (accuracy > bestAccuracyH1) {
+                            bestH1 = h1;
+                            bestAccuracyH1 = accuracy;
                         }
+                        writer.write("PT2," + h1 + ",NA,NA," + activation + "," + batchSize + "," + accuracy + "\n");
+                        System.out.println("H1=" + h1 + ", Activation=" + activation + ", BatchSize=" + batchSize + ", Accuracy=" + accuracy);
                     }
                 }
             }
+
+            // Step 2: Find the best H2 given the best H1
+            int bestH2 = 0;
+            double bestAccuracyH2 = 0.0;
+            for (int h2 : h2Values) {
+                for (String activation : activations) {
+                    for (int batchSize : batchSizes) {
+                        MLP model = new MLP(new int[]{D, bestH1, h2, K}, activation, ACTIVATION_OUTPUT);
+                        model.train(encodedTrainingData, batchSize, 800, 200);
+                        double accuracy = model.evaluate(encodedTestingData);
+                        if (accuracy > bestAccuracyH2) {
+                            bestH2 = h2;
+                            bestAccuracyH2 = accuracy;
+                        }
+                        writer.write("PT2," + bestH1 + "," + h2 + ",NA," + activation + "," + batchSize + "," + accuracy + "\n");
+                        System.out.println("H1=" + bestH1 + ", H2=" + h2 + ", Activation=" + activation + ", BatchSize=" + batchSize + ", Accuracy=" + accuracy);
+                    }
+                }
+            }
+
+            // Step 3: Find the best H3 given the best H1 and H2
+            int bestH3 = 0;
+            double bestAccuracyH3 = 0.0;
+            for (int h3 : h3Values) {
+                for (String activation : activations) {
+                    for (int batchSize : batchSizes) {
+                        MLP model = new MLP(new int[]{D, bestH1, bestH2, h3, K}, activation, ACTIVATION_OUTPUT);
+                        model.train(encodedTrainingData, batchSize, 800, 200);
+                        double accuracy = model.evaluate(encodedTestingData);
+                        if (accuracy > bestAccuracyH3) {
+                            bestH3 = h3;
+                            bestAccuracyH3 = accuracy;
+                        }
+                        writer.write("PT3," + bestH1 + "," + bestH2 + "," + h3 + "," + activation + "," + batchSize + "," + accuracy + "\n");
+                        System.out.println("H1=" + bestH1 + ", H2=" + bestH2 + ", H3=" + h3 + ", Activation=" + activation + ", BatchSize=" + batchSize + ", Accuracy=" + accuracy);
+                    }
+                }
+            }
+
+            System.out.println("Best Configuration: H1=" + bestH1 + ", H2=" + bestH2 + ", H3=" + bestH3);
+
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Error writing to file: " + e.getMessage());
         }
     }
 
