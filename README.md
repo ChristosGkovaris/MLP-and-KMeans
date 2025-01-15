@@ -40,3 +40,7 @@ clustering results using a GUI. A neural network for classification tasks, with 
   ```bash
      git clone https://github.com/ChristosGkovaris/MLP-and-KMeans.git
      cd MLP-and-KMeans
+
+
+## Collaboration
+This project was a collaborative effort. Special thanks to [SpanouMaria](https://github.com/SpanouMaria), for their significant contributions to the development and improvement of the game.
