@@ -38,5 +38,5 @@ clustering results using a GUI. A neural network for classification tasks, with 
 ## How to Run
 - Clone the repository:
   ```bash
-     git clone https://github.com/YourUsername/MLP-and-KMeans.git
+     git clone https://github.com/ChristosGkovaris/MLP-and-KMeans.git
      cd MLP-and-KMeans
